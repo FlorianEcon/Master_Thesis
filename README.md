@@ -13,6 +13,11 @@ While Python is used for many crude computations and web-based services such as 
 For now, the folders are all seperate and produce their own "final" versions of the respective file. The folder "Analysis" will then merge them and include a file to run regressions.
 A main-file to run the different Stata-codes at once will be provided in the future.
 
+## Note
+- Files are still subject to change!
+- Some documentation and coments are still missing in FBI-NIBRS
+- Files in Analysis are not yet finished and the folder should only be seen as a work in progress
+
 ## FBI UCR
 Accessing, downloading and transforming data from the FBI's UCR API.
 This data covers yearly and monthly crimes based on the UCR reporting system.
