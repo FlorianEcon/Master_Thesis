@@ -18,8 +18,14 @@ Accessing, downloading and transforming data from the FBI's UCR API.
 This data covers yearly and monthly crimes based on the UCR reporting system.
 Further, data on each agency, such as employment numbers and the amount of population covered by an agency are included
 
-For more information see the following link:
+For more information and data see the following link:
 https://crime-data-explorer.fr.cloud.gov/pages/docApi
+
+## FBI NIBRS
+As the UCR, NIBRS provides criminal statistics on an agency level. The advantage of NIBRS is however, that each criminal offense has it's own entry.
+This allows to create a daily dataset indicating the number of crimes that happened within an agency including their time and location_id (e.g. residential)
+
+For more information and data the link provided above
 
 ## NOOA
 This data includes daily weather data for each weather station in the USA as reported in the "daily-summaries" file provided by NOOA
@@ -32,12 +38,20 @@ https://www.ncei.noaa.gov/support/access-data-service-api-user-documentation
 The American Community Survey as a product of the US-Census and provides several socio-economic indicators on different geographical levels throughout the USA.
 In the following, I concentrate both on County and MSA level data.
 
-For more information see the following link:
+For more information and data see the following link:
 https://www.census.gov/programs-surveys/acs/data.html
 
 ## Trips Data
 The Maryland Institute of Technology provides trips data. This data is publicly available through the Bereau of Transportation statistics.
 This data is available daily and on County level.
 
-For more information see the following link:
+For more information and data see the following link:
 https://data.bts.gov/Research-and-Statistics/Trips-by-Distance/w96p-f2qv
+
+
+## LAUS
+The local area unemployment statistics provided by the BLS are a supplementary data source which might end up connecting movement patterns to local unemployment levels.
+LAUS includes county level monthly unemployment rates. To obtain the final dataset, their website offers a code-list which allows the matching of their time-series IDs to their respective area (county)
+
+For more information and data see the following link:
+https://www.bls.gov/lau/lausad.htm
