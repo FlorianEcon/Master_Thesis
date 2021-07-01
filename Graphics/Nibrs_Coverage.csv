@@ -1,0 +1,51 @@
+﻿State,State-Code,Share,Population,Agencies,Division,Region,Division Number,Region Number,Sample
+Alabama,AL,0,4903185,352,East South Central,South,2,3,0
+Alaska,AK,,731545,33,Pacific,West,6,4,0
+Arizona,AZ,6,7278717,109,Mointain,West,4,4,0
+Arkansas,AR,100,3017825,278,West South Central,South,8,3,1
+California,CA,,39512223,738,Pacific,West,6,4,0
+Colorado,CO,99,5758736,221,Mointain,West,4,4,1
+Connecticut,CT,93,3565287,102,New England,Northeast,5,2,1
+Delaware,DE,33,973764,63,South Atlantic,South,7,3,0
+Florida,FL,,21477737,678,South Atlantic,South,7,3,0
+Georgia,GA,2,10617423,249,South Atlantic,South,7,3,0
+Hawaii,HI,33,1415872,3,Pacific,West,6,4,0
+Idaho,ID,97,1787065,206,Mointain,West,4,4,1
+Illinois,IL,0,12671821,488,East North Central,Midwest,1,1,0
+Indiana,IN,60,67327219,243,East North Central,Midwest,1,1,0
+Iowa,IA,100,3155070,246,West North Central,Midwest,8,1,1
+Kansas,KS,99,2913314,373,West North Central,Midwest,8,1,1
+Kentucky,KY,100,4467673,411,East South Central,South,2,3,1
+Louisiana,LA,16,4648794,186,West South Central,South,8,3,0
+Maine,ME,22,1344212,122,New England,Northeast,5,2,0
+Maryland,MD,1,6045680,152,South Atlantic,South,7,3,0
+Massachusetts,MA,87,6949503,356,New England,Northeast,5,2,1
+Michigan,MI,99,9986857,643,East North Central,Midwest,1,1,1
+Minnesota,MN,13,5639632,286,West North Central,Midwest,8,1,0
+Mississippi,MS,25,2976149,65,East South Central,South,2,3,0
+Missouri,MO,6,6137428,505,West North Central,Midwest,8,1,0
+Montana,MT,94,1068778,103,Mointain,West,4,4,1
+Nebraska,NE,45,1934408,220,West North Central,Midwest,8,1,0
+Nevada,NV,,3080156,56,Mountain,West,4,4,0
+New Hampshire,NH,100,1359711,188,New England,Northeast,5,2,1
+New Jersey,NJ,,8882190,577,Middle Atlantic,Northeast,3,2,0
+New Mexico,NM,5,2096829,121,Mountain,West,4,4,0
+New York,NY,,19453561,572,Middle Atlantic,Northeast,3,2,0
+North Carolina,NC,96,10488084,26,South Atlantic,South,7,3,1
+North Dakota,ND,96,762062,110,West North Central,Midwest,8,1,1
+Ohio,OH,88,11689100,594,East North Central,Midwest,1,1,1
+Oklahoma,OK,88,3956971,426,West South Central,South,8,3,1
+Oregon,OR,97,4217737,206,Pacific,West,6,4,1
+Pennsylvania,PA,2,12801989,1475,Middle Atlantic,Northeast,3,2,0
+Rhode Island,RI,96,1059361,49,New England,Northeast,5,2,1
+South Carolina,SC,100,5148714,405,South Atlantic,South,7,3,1
+South Dakota,SD,94,884659,129,West North Central,Midwest,8,1,1
+Tennessee,TN,100,6833174,463,East South Central,South,2,3,1
+Texas,TX,38,28995881,694,West South Central,South,8,3,0
+Utah,UT,65,3205958,118,Mountain,West,4,4,0
+Vermont,VT,100,623989,88,New England,Northeast,5,2,1
+Virginia,VA,100,8535519,415,South Atlantic,South,7,3,1
+Washington,WA,91,7614893,245,Pacific,West,6,4,1
+West Verginia,WV,100,1792147,238,South Atlantic,South,7,3,1
+Wisconsin,WI,44,5822434,380,East North Central,Midwest,1,1,0
+Wyoming,WY,,578759,50,Mountain,West,4,4,0
