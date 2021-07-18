@@ -21,6 +21,8 @@ cd  "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\WIP\weather_data"
 	// Import Data
 	import delimited "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\WIP\weather_data\climatedata.csv", varnames(1)
 	// Dataset covers 28.061 Stations
+	// Stations with reported Data: 12564
+	// Stations report on average 270 days of the year in 2019
 
 	// Note about meassurements:
 	// Temps - in C
