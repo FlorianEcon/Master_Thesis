@@ -387,14 +387,24 @@ gen UER_month2 = UER_month * UER_month
 		
 		// Table OC1c
 		// Population at Home
-		esttab OC1c_P_FE_Vio OC1c_P_FEIV_Vio OC1c_P_FEIVM_Vio OC1c_P_P_Vio OC1c_P_PIV_Vio OC1c_P_PIVM_Vio using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC1bHome.tex", keep(PopulationAtHome Pop_fe Pop_fe_M) title("Opportunity Home on Violent Crimes") coeflabels(PopulationAtHome "Population Home") mtitles("FE" "FE-IV" "FE-IV-M" "P" "P-IV" "P-IV-M")   replace
+		esttab OC1c_P_FE_Vio OC1c_P_FEIV_Vio OC1c_P_FEIVM_Vio OC1c_P_P_Vio OC1c_P_PIV_Vio OC1c_P_PIVM_Vio using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC1cHome.tex", keep(PopulationAtHome Pop_fe Pop_fe_M) title("Opportunity Home on Violent Crimes") coeflabels(PopulationAtHome "Population Home") mtitles("FE" "FE-IV" "FE-IV-M" "P" "P-IV" "P-IV-M")   replace
 		
 		// Trips p.P.
-		esttab OC1c_T_FE_Vio OC1c_T_FEIV_Vio OC1c_T_FEIVM_Vio OC1c_T_P_Vio OC1c_T_PIV_Vio OC1c_T_PIVM_Vio using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC1bTrip.tex", keep(trips_pP trips_fe trips_fe_M) title("Opportunity Trips on Violent Crimes") coeflabels(trips_pP "Trips p.P.") mtitles("FE" "FE-IV" "FE-IV-M" "P" "P-IV" "P-IV-M") replace
+		esttab OC1c_T_FE_Vio OC1c_T_FEIV_Vio OC1c_T_FEIVM_Vio OC1c_T_P_Vio OC1c_T_PIV_Vio OC1c_T_PIVM_Vio using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC1cTrip.tex", keep(trips_pP trips_fe trips_fe_M) title("Opportunity Trips on Violent Crimes") coeflabels(trips_pP "Trips p.P.") mtitles("FE" "FE-IV" "FE-IV-M" "P" "P-IV" "P-IV-M") replace
 		
 		// Change in Endogeneity for the At Home (endo for VIo; Exo for Prop) might be due to pre-planned nature of many property crimes and spontaneous nature of violent crimes
+		
+	*******************
+	// d) Aggregates
+	*******************
+	// Table OC1d
+	// Population at Home
+	esttab  OC1a_P_FEIVM_Tot OC1a_P_PIVM_Tot OC1b_P_FEIVM_Prop OC1b_P_PIVM_Prop OC1c_P_FEIVM_Vio   OC1c_P_PIVM_Vio using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC1dHome.tex", keep(PopulationAtHome  Pop_fe_M) title("Opportunity Home on Aggregates") coeflabels(PopulationAtHome "Population Home") mtitles("Tot FE" "Tot P" "Prop FE" "Prop P" "Vio FE" "Vio P")   replace
+	
+	// Trips p.P.
+	esttab  OC1a_T_FEIVM_Tot  OC1a_T_PIVM_Tot OC1b_T_FEIVM_Prop  OC1b_T_PIVM_Prop OC1c_T_FEIVM_Vio  OC1c_T_PIVM_Vio using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC1dTrip.tex", keep(trips_pP  trips_fe_M) title("Opportunity Trips on Aggregates") coeflabels(trips_pP "Trips p.P.") mtitles("Tot FE" "Tot P" "Prop FE" "Prop P" "Vio FE" "Vio P") replace
 
-
+  
 **********************************************
 // iii. Crime Heterogeneity	- Table OC2	//
 **********************************************
@@ -442,7 +452,10 @@ gen UER_month2 = UER_month * UER_month
 		esttab OC1b_P_PIVM_Prop OC2a_P_Rob OC2a_P_Lar OC2a_P_Bur OC2a_P_MVT using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC2aHome.tex", keep(PopulationAtHome Pop_fe_M) title("Opportunity Home for Property Offenses") coeflabels(PopulationAtHome "Population Home") mtitles("Property Crimes" "Robbery" "Larcency" "Burglary" "MVT")   replace
 		
 		// Trips p.P.
-		esttab  OC2a_T_Bur OC2a_T_Lar OC2a_T_Rob OC2a_T_MVT using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC2aTrip.tex", keep(trips_pP trips_fe_M) title("Opportunity Trips on Property Offenses") coeflabels(trips_pP "Trips p.P.") mtitles("Property Crimes" "Robbery" "Larcency" "Burglary" "MVT") replace
+		esttab  OC1b_T_PIVM_Prop OC2a_T_Rob OC2a_T_Lar OC2a_T_Bur OC2a_T_MVT using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC2aTrip.tex", keep(trips_pP trips_fe_M) title("Opportunity Trips on Property Offenses") coeflabels(trips_pP "Trips p.P.") mtitles("Property Crimes" "Robbery" "Larcency" "Burglary" "MVT") replace
+		
+		// ALL Property Crimes
+		esttab OC1b_P_PIVM_Prop OC1b_T_PIVM_Prop OC2a_P_Rob OC2a_T_Rob OC2a_P_Lar OC2a_T_Lar OC2a_P_Bur OC2a_T_Bur OC2a_P_MVT OC2a_T_MVT using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC2aProp.tex", keep(PopulationAtHome Pop_fe_M trips_pP trips_fe_M) title("Opportunity Home for Property Offenses") coeflabels(PopulationAtHome "Population Home" trips_pP "Trips p.P.")   replace
 		
 		
 	*******************
@@ -472,10 +485,10 @@ gen UER_month2 = UER_month * UER_month
 		
 		// Table OC2b
 		// Population at Home
-		esttab OC1c_P_PIVM_Vio OC2b_P_AA OC2b_P_Mur OC2b_P_Rape using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC2aHome.tex", keep(PopulationAtHome Pop_fe_M) title("Opportunity Home for Property Offenses") coeflabels(PopulationAtHome "Population Home") mtitles("Violent Crimes" "AA" "Murder" "Rape")   replace
+		esttab OC1c_P_PIVM_Vio OC2b_P_AA OC2b_P_Mur OC2b_P_Rape using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC2bHome.tex", keep(PopulationAtHome Pop_fe_M) title("Opportunity Home for Property Offenses") coeflabels(PopulationAtHome "Population Home") mtitles("Violent Crimes" "AA" "Murder" "Rape")   replace
 		
 		// Trips p.P.
-		esttab OC1c_T_PIVM_Vio OC2b_T_AA OC2b_T_Mur OC2b_T_Rape using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC2aTrip.tex", keep(trips_pP trips_fe_M) title("Opportunity Trips on Property Offenses") coeflabels(trips_pP "Trips p.P.") mtitles("Violent Crimes" "AA" "Murder" "Rape") replace
+		esttab OC1c_T_PIVM_Vio OC2b_T_AA OC2b_T_Mur OC2b_T_Rape using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC2bTrip.tex", keep(trips_pP trips_fe_M) title("Opportunity Trips on Property Offenses") coeflabels(trips_pP "Trips p.P.") mtitles("Violent Crimes" "AA" "Murder" "Rape") replace
 	
 		
 **********************************************
@@ -515,10 +528,10 @@ gen UER_month2 = UER_month * UER_month
 		
 		// Table OC2a
 		// Population at Home
-		esttab OC3a_P_Tot OC1a_P_PIVM_Tot OC3a_P_Prop OC1b_P_PIVM_Prop OC3a_P_Vio OC1c_P_PIVM_Vio using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3aHome.tex", keep(PopulationAtHome Pop_fe_M) title("Daytime Opportunity Home for AggregateCrimes") coeflabels(PopulationAtHome "Population Home") mtitles("Total Daytime" "Total" "Property Daytime" "Property" "Violent Daytime" "Violent")   replace
+		esttab  OC1a_P_PIVM_Tot OC3a_P_Tot  OC1b_P_PIVM_Prop OC3a_P_Prop  OC1c_P_PIVM_Vio OC3a_P_Vio using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3aHome.tex", keep(PopulationAtHome Pop_fe_M) title("Daytime Opportunity Home for AggregateCrimes") coeflabels(PopulationAtHome "Population Home") mtitles("Total" "Total Daytime" "Property" "Property Daytime" "Violent" "Violent Daytime")   replace
 		
 		// Trips p.P.
-		esttab OC3a_T_Tot OC1a_T_PIVM_Tot OC3a_T_Prop OC1b_T_PIVM_Prop OC3a_T_VIo OC1c_T_PIVM_Vio using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3aTrip.tex", keep(trips_pP trips_fe_M) title("Daytime Opportunity Trips for Aggregate Crimes") coeflabels(trips_pP "Trips p.P.") mtitles("Total Daytime" "Total" "Property Daytime" "Property" "Violent Daytime" "Violent") replace
+		esttab  OC1a_T_PIVM_Tot OC3a_T_Tot  OC1b_T_PIVM_Prop OC3a_T_Prop  OC1c_T_PIVM_Vio OC3a_T_VIo using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3aTrip.tex", keep(trips_pP trips_fe_M) title("Daytime Opportunity Trips for Aggregate Crimes") coeflabels(trips_pP "Trips p.P.") mtitles("Total" "Total Daytime" "Property" "Property Daytime" "Violent" "Violent Daytime" ) replace
 	
 
 	*******************
@@ -589,7 +602,7 @@ gen UER_month2 = UER_month * UER_month
 		esttab OC1c_P_PIVM_Vio OC3a_P_Vio OC3c_P_AA OC3c_P_Mur OC3c_P_Rape using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3cHome.tex", keep(PopulationAtHome Pop_fe_M) title("Daytime Opportunity Home for Violent Offenses") coeflabels(PopulationAtHome "Population Home") mtitles("Violent" "Violent Daytime" "AA" "Murder" "Rape")   replace
 		
 		// Trips p.P.
-		esttab OC1c_T_PIVM_Vio OC3a_T_Vio OC3c_T_Rape OC3c_T_Mur OC3c_T_AA using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3cTrip.tex", keep(trips_pP trips_fe_M) title("Daytime Opportunity Trips on Violent Offenses") coeflabels(trips_pP "Trips p.P.") mtitles("Violent" "Violent Daytime" "AA" "Murder" "Rape") replace
+		esttab OC1c_T_PIVM_Vio OC3a_T_VIo OC3c_T_Rape OC3c_T_Mur OC3c_T_AA using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3cTrip.tex", keep(trips_pP trips_fe_M) title("Daytime Opportunity Trips on Violent Offenses") coeflabels(trips_pP "Trips p.P.") mtitles("Violent" "Violent Daytime" "AA" "Murder" "Rape") replace
 	 
 
 **********************************************
@@ -697,7 +710,7 @@ gen UER_month2 = UER_month * UER_month
 		qui: xtpoisson residential_Rape trips_pP trips_fe_M i.month, fe vce(robust)
 		eststo OC4c_T_Rape
 		
-		// Table OC3c
+		// Table OC4c
 		// Population at Home
 		esttab OC1c_P_PIVM_Vio OC4a_P_Vio OC4c_P_AA OC4c_P_Mur OC4c_P_Rape using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3cHome.tex", keep(PopulationAtHome Pop_fe_M) title("Residential Opportunity Home for Violent Offenses") coeflabels(PopulationAtHome "Population Home") mtitles("Violent" "Violent Residential" "AA" "Murder" "Rape")   replace
 		
