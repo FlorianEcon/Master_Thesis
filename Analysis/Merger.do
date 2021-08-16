@@ -1,3 +1,20 @@
+************************
+// Merger
+************************
+/*
+    Created on 20.3.2021
+    @author: Florian Fickler
+    Goal:
+        1. Add some data points regarding days of the year
+		2. Merge ACS and BTS to one County-Level dataset
+		3. Add FBI Crime data and use distribution algorithm for multi-county Agencies
+		4. Add Weather (NOOA) and Unemployment (LAUS) to the counties
+		5. Save a final dataset for estimations
+		6. This procedure is done for both waves of the ACS (Wave 1 obsolete)
+		7. This is also done for the MSA level (currently not completely implemented)
+
+*/
+
 /// Merge All three Datasets to one big one
 drop _all
 //set cd

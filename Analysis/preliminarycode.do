@@ -47,13 +47,7 @@ drop coverd_pop coverd_pop_temp
 // NOOA Weather Data
 // we first need to create a day of the year indicator
 		// Create Date Variables
-		gen str_date = string(day) + "/" + string(month) + "/2019"
-		generate eventdate = date(str_date, "DMY")
 
-		// create a variable indicating the day-number of the entry (1-365) for 2019
-		gen day_year = doy(eventdate)
-
-		drop eventdate str_date 
 
 merge 1:1 Area_Name state day_year using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset\Intermediate Files\weather_county_day.dta"
 
@@ -69,8 +63,6 @@ drop if _merge==2
 drop _merge
 
 
-
-
-	
+// could add the day_year to the top of the merge - but it is not contained in NIBRS, so maybe fair to do it last
 	
 	
