@@ -25,11 +25,53 @@ drop _all
 //set cd
 cd "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset"
 
+// Load Dataset
+use "Opportunity_County_Popweight_5.dta"
 
 ****************************************************************************************************
 // 1. Summary Statistics
 ****************************************************************************************************
+// Some days miss a observation for prcp so we will only use days that have rain data available
+// Also for some counties we only have 0 crimes registeres, this does not allow any variation to be exploited in FE and therefore they are consequentially dropped from Poisson
+drop if missing(prcp)
+// Identify non crime counties
+// egen temp_tot_crimes = total(crimes_number), by(Area_ID )
+// drop if temp_tot_crimes == 0
+// drop temp_tot_crimes
 
+
+**********************************************
+// i. Non-Crime Summaries - S1//
+**********************************************
+	gen PopHome100 = 100 * PopulationAtHome
+
+	// add do Data section
+	replace trips_pP = . if trips_pP > 21
+
+	estpost sum  UER_month trips_pP PopHome100 prcp
+	esttab using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/S1.tex", cells("mean(fmt(2)) sd(fmt(2)) min(fmt(1)) max(fmt(0))")  nonumber replace 
+
+**********************************************
+// ii. Crime Summaries - S2 //
+**********************************************
+		// Calculate total crimes happened during the day (should be in merger or NIBRS LOAD!)
+		gen crimes_daytime = daytime_crime_AA + daytime_crime_Rape + daytime_crime_Robbery + daytime_crime_MVT + daytime_crime_Murder + daytime_crime_Larcency + daytime_crime_Burglary
+
+		gen daytime_crime_Property =  daytime_crime_Burglary * daytime_crime_Larcency + daytime_crime_MVT + daytime_crime_Robbery
+
+		gen daytime_crime_Violent =  daytime_crime_AA + daytime_crime_Murder + daytime_crime_Rape
+
+
+		// And Total Crimes happend in residential areas by Group
+		gen residential_Property = residential_Burglary + residential_Larcency + residential_MVT + residential_Robbery
+
+		gen residential_Violent = residential_AA + residential_Murder + residential_Rape
+
+
+	// Summaries of Unemployment, Precipitation, and Criminal Opportunity
+	 estpost sum  crimes_number Offense_FBI_Property Offense_Larcency Offense_Burglary Offense_MVT Offense_Robbery    Offense_FBI_Violent Offense_AA Offense_Rape Offense_Murder  location_residence crimes_daytime     
+	esttab using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/S2.tex", cells("mean(fmt(2)) sd(fmt(2)) min(fmt(1)) max(fmt(0))")  nonumber replace 
+	
 
 
 
@@ -41,9 +83,6 @@ cd "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset"
 **********************************************
 // Preliminaries							 //
 **********************************************
-// Load Dataset
-use "Opportunity_County_Popweight_5.dta"
-
 // Set up as Panel
 // First create an id for each county
 egen Area_ID = group(geographicareaname)
@@ -150,29 +189,12 @@ gen UER_month2 = UER_month * UER_month
 	**********************************************
 	// a) Calculate Missing Variables (Add to NIBRS LOAD Eventually) //
 	**********************************************
-		// Calculate total crimes happened during the day (should be in merger or NIBRS LOAD!)
-		gen crimes_daytime = daytime_crime_AA + daytime_crime_Rape + daytime_crime_Robbery + daytime_crime_MVT + daytime_crime_Murder + daytime_crime_Larcency + daytime_crime_Burglary
-
-		gen daytime_crime_Property =  daytime_crime_Burglary * daytime_crime_Larcency + daytime_crime_MVT + daytime_crime_Robbery
-
-		gen daytime_crime_Violent =  daytime_crime_AA + daytime_crime_Murder + daytime_crime_Rape
-
-
-		// And Total Crimes happend in residential areas by Group
-		gen residential_Property = residential_Burglary + residential_Larcency + residential_MVT + residential_Robbery
-
-		gen residential_Violent = residential_AA + residential_Murder + residential_Rape
+	// Moved upward
 		
 	**********************************************
 	// b) Reduce Sample to smalles common level //
 	**********************************************
-	// Some days miss a observation for prcp so we will only use days that have rain data available
-	// Also for some counties we only have 0 crimes registeres, this does not allow any variation to be exploited in FE and therefore they are consequentially dropped from Poisson
-	drop if missing(prcp)
-	// Identify non crime counties
-	// egen temp_tot_crimes = total(crimes_number), by(Area_ID )
-	// drop if temp_tot_crimes == 0
-	// drop temp_tot_crimes
+
 		
 
 
