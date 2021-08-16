@@ -48,8 +48,8 @@ drop if missing(prcp)
 	// add do Data section
 	replace trips_pP = . if trips_pP > 21
 
-	estpost sum  UER_month trips_pP PopHome100 prcp
-	esttab using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/S1.tex", cells("mean(fmt(2)) sd(fmt(2)) min(fmt(1)) max(fmt(0))")  nonumber replace 
+	estpost sum  UER_month  PopHome100 trips_pP prcp
+	esttab using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/S1.tex", cells("count mean(fmt(2)) sd(fmt(2)) min(fmt(1)) max(fmt(0))")  nonumber replace 
 
 **********************************************
 // ii. Crime Summaries - S2 //
@@ -70,7 +70,7 @@ drop if missing(prcp)
 
 	// Summaries of Unemployment, Precipitation, and Criminal Opportunity
 	 estpost sum  crimes_number Offense_FBI_Property Offense_Larcency Offense_Burglary Offense_MVT Offense_Robbery    Offense_FBI_Violent Offense_AA Offense_Rape Offense_Murder  location_residence crimes_daytime     
-	esttab using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/S2.tex", cells("mean(fmt(2)) sd(fmt(2)) min(fmt(1)) max(fmt(0))")  nonumber replace 
+	esttab using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/S2.tex", cells("count mean(fmt(2)) sd(fmt(2)) min(fmt(1)) max(fmt(0))")  nonumber replace 
 	
 
 
