@@ -275,7 +275,7 @@ drop if missing(crimes_number) // 577 Observations
 // generate a daytime dummy for each crime
 foreach var in AA Murder Rape Robbery Burglary Larcency MVT {
 	gen daytime_crime_`var' = 0
-	replace daytime_crime_`var'  = 1 if inrange(incident_hour, 8,18) & Offense_`var' == 1
+	replace daytime_crime_`var'  = 1 if inrange(incident_hour, 5,17) & Offense_`var' == 1
 }
 
 
