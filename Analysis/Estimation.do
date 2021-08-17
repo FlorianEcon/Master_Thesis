@@ -548,7 +548,7 @@ gen UER_month2 = UER_month * UER_month
 		qui: xtpoisson daytime_crime_Violent trips_pP trips_fe_M i.month, fe vce(robust)
 		eststo OC3a_T_VIo
 		
-		// Table OC2a
+		// Table OC3a
 		// Population at Home
 		esttab  OC1a_P_PIVM_Tot OC3a_P_Tot  OC1b_P_PIVM_Prop OC3a_P_Prop  OC1c_P_PIVM_Vio OC3a_P_Vio using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3aHome.tex", keep(PopulationAtHome Pop_fe_M) title("Daytime Opportunity Home for AggregateCrimes") coeflabels(PopulationAtHome "Population Home") mtitles("Total" "Total Daytime" "Property" "Property Daytime" "Violent" "Violent Daytime")   replace scalars("N_g Cluster")
 		
