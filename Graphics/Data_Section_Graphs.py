@@ -42,13 +42,12 @@ fig = go.Figure(data=go.Choropleth(
     z=data['Share'],  # Data to be color-coded
     locationmode='USA-states',  # Set of locations match entries in `locations`
     text=data['State'],  # Change hover text to state names
-    colorscal='Reds',
+    colorscale='ylorbr',
     colorbar_title="NIBRS Share",
 ))
 
 # Update Layout
 fig.update_layout(
-    title_text='Agencies Participating in NIBRS',
     geo_scope='usa',  # Limit map scope to USA
 )
 
