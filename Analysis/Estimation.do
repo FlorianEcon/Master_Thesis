@@ -31,13 +31,20 @@ use "Opportunity_County_Popweight_5.dta"
 ****************************************************************************************************
 // 1. Summary Statistics
 ****************************************************************************************************
-// Some days miss a observation for prcp so we will only use days that have rain data available
-// Also for some counties we only have 0 crimes registeres, this does not allow any variation to be exploited in FE and therefore they are consequentially dropped from Poisson
-drop if missing(prcp)
-// Identify non crime counties
-// egen temp_tot_crimes = total(crimes_number), by(Area_ID )
-// drop if temp_tot_crimes == 0
-// drop temp_tot_crimes
+// Drop counties without any Weather Data
+gen rep = 1 if prcp != .
+bys geographicareaname: egen sumrep = sum(rep)
+drop rep
+
+drop if sumrep == 0
+drop sumrep
+
+bys geographicareaname: egen zerocrimes = count(crimes_number) if crimes_number == 0 | prcp == . | trips_pP == . | PopulationAtHome == .
+bys geographicareaname: egen maxzero = max(zerocrimes)
+bys geographicareaname: egen obscrimes = count(crimes_number)
+gen difobs = obscrimes - maxzero
+drop if difobs == 0
+drop zerocrimes obscrimes difobs maxzero
 
 
 **********************************************
@@ -211,20 +218,20 @@ gen UER_month2 = UER_month * UER_month
 		set seed 98435
 		
 		// Without month controls
-		qui: xtreg PopulationAtHome prcp, fe vce(bootstrap)
+		xtreg PopulationAtHome prcp, fe cluster(Area_ID)
 		eststo FS_Pop
 		predict double Pop_fe, e
 		
-		qui: xtreg trips_pP prcp, fe vce(bootstrap)
+		xtreg trips_pP prcp, fe cluster(Area_ID)
 		eststo FS_Trip
 		predict double trips_fe, e
 		
 		// With month controls
-		qui: xtreg PopulationAtHome prcp i.month, fe vce(bootstrap)
+		xtreg PopulationAtHome prcp i.month, fe cluster(Area_ID)
 		eststo FS_Pop_M
 		predict double Pop_fe_M, e	
 		
-		qui: xtreg trips_pP prcp i.month, fe vce(bootstrap)
+		xtreg trips_pP prcp i.month, fe cluster(Area_ID)
 		eststo FS_Trip_M
 		predict double trips_fe_M, e
 		
@@ -624,7 +631,7 @@ gen UER_month2 = UER_month * UER_month
 		esttab OC3a_P_Vio OC3c_P_AA OC3c_P_Mur OC3c_P_Rape using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3cHome.tex", keep(PopulationAtHome Pop_fe_M) title("Daytime Opportunity Home for Violent Offenses") coeflabels(PopulationAtHome "Population Home") mtitles("Violent" "Violent Daytime" "AA" "Murder" "Rape")   replace scalars("N_g Cluster")
 		
 		// Trips p.P.
-		esttab OC3a_T_VIo OC3c_T_Rape OC3c_T_Mur OC3c_T_AA using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3cTrip.tex", keep(trips_pP trips_fe_M) title("Daytime Opportunity Trips on Violent Offenses") coeflabels(trips_pP "Trips p.P.") mtitles("Violent" "Violent Daytime" "AA" "Murder" "Rape") replace scalars("N_g Cluster")
+		esttab OC3a_T_VIo OC3c_T_AA OC3c_T_Mur  OC3c_T_Rape using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC3cTrip.tex", keep(trips_pP trips_fe_M) title("Daytime Opportunity Trips on Violent Offenses") coeflabels(trips_pP "Trips p.P.") mtitles("Violent" "Violent Daytime" "AA" "Murder" "Rape") replace scalars("N_g Cluster")
 	 
 
 **********************************************
@@ -737,7 +744,7 @@ gen UER_month2 = UER_month * UER_month
 		esttab  OC4a_P_Vio OC4c_P_AA OC4c_P_Mur OC4c_P_Rape using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC4cHome.tex", keep(PopulationAtHome Pop_fe_M) title("Residential Opportunity Home for Violent Offenses") coeflabels(PopulationAtHome "Population Home") mtitles( "Violent Residential" "AA" "Murder" "Rape")   replace scalars("N_g Cluster")
 		
 		// Trips p.P.
-		esttab  OC4a_T_Vio OC4c_T_Rape OC4c_T_Mur OC4c_T_AA using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC4cTrip.tex", keep(trips_pP trips_fe_M) title("Residential Opportunity Trips on Violent Offenses") coeflabels(trips_pP "Trips p.P.") mtitles( "Violent Residential" "AA" "Murder" "Rape") replace scalars("N_g Cluster")
+		esttab  OC4a_T_Vio OC4c_T_AA  OC4c_T_Mur OC4c_T_Rape  using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset/Tables/OC4cTrip.tex", keep(trips_pP trips_fe_M) title("Residential Opportunity Trips on Violent Offenses") coeflabels(trips_pP "Trips p.P.") mtitles( "Violent Residential" "AA" "Murder" "Rape") replace scalars("N_g Cluster")
 
 
 
