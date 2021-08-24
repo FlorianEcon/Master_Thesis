@@ -215,8 +215,8 @@ gen UER_month2 = UER_month * UER_month
 		// Using vce(bootstrap) automatically clusters the SE
 		
 		// need to set seed!
-		set seed 98435
-		
+		set seed 98435	
+
 		// Without month controls
 		xtreg PopulationAtHome prcp, fe cluster(Area_ID)
 		eststo FS_Pop
