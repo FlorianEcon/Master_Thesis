@@ -8,10 +8,6 @@
                 USA - Map with NIBRS shares and Sample indicator
                 Contour plot for Crime within each State(or County if possible)
                 Contour plot for Trips? - coudl be in the same Graph as the one about crimes
-
-    To-Do for it to run:
-                         set working directory (line 25)
-                         define api_key (line 26)
 '''
 
 ######################
@@ -33,7 +29,7 @@ os.chdir(r"C:\Users\Flori\OneDrive\Documents\GitHub\Crime-Data\Master_Thesis\Gra
 # Would be nice to add Sample indicator to Graph
 
 # Import data
-data = pd.read_csv('Nibrs_Coverage.csv')#
+data = pd.read_csv('Nibrs_Coverage.csv')
 
 # Change string to numeric and missing to "nan"
 data["Share"] = pd.to_numeric(data["Share"])
