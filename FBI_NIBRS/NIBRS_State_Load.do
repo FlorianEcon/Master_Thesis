@@ -87,10 +87,10 @@ foreach state in `postal'{
 	//label define successfull 1 "Complete" 0 "Attempt" // move this and add it
 		
 	// Entry Method
-	replace method_entry_code = "1" if method_entry_code == "F"
-	replace method_entry_code = "0" if method_entry_code == "N"
-	destring method_entry_code, replace
-	rename method_entry_code  forced_entry
+	//replace method_entry_code = "1" if method_entry_code == "F"
+	//replace method_entry_code = "0" if method_entry_code == "N"
+	//destring method_entry_code, replace
+	//rename method_entry_code  forced_entry
 	
 	***************
 	// Location Type
@@ -99,7 +99,8 @@ foreach state in `postal'{
 	gen location_residence = 0
 	replace location_residence = 1 if location_id == 20 // residence/home
 	label var location_residence "Incident Location - Residence"
-
+	
+	/* Currently only residential in use
 	// Outdoor
 	gen location_outdoor = 0
 	replace location_outdoor = 1 if inlist(location_id, 10,13,16,18, 31,38,39)
@@ -114,7 +115,7 @@ foreach state in `postal'{
 	gen location_commerical = 0
 	replace location_commerical = 1 if !inlist(location_id, 11,15,22,32,37,40,41,45,4, 0,6,25,26,42,44,47, 10,13,16,18, 31,38,39, 20)
 	label var location_commerical "Incident Location - Comerical"
-	
+	*/
 	***************
 	// Offense Type
 
@@ -270,43 +271,34 @@ gen crimes_number = Offense_FBI_Property + Offense_FBI_Violent
 // e.g. Park Ranger, DEA, School Police, Natural Ressources; State Police; Transport Police
 drop if missing(crimes_number) // 577 Observations
 
-// gen obs with property value
-gen prop_obs = 0
-replace prop_obs = 1 if property_value != .
 
 // generate a daytime dummy for each crime
 foreach var in AA Murder Rape Robbery Burglary Larcency MVT {
 	gen daytime_crime_`var' = 0
-	replace daytime_crime_`var'  = 1 if inrange(incident_hour, 8,18) & Offense_`var' == 1
+	replace daytime_crime_`var'  = 1 if inrange(incident_hour, 5,17) & Offense_`var' == 1
 }
 
-// Collapse to a single day-month-agency- observation
+
+// generate a residential dummy for each crime
+foreach var in AA Murder Rape Robbery Burglary Larcency MVT {
+	gen residential_`var' = 0
+	replace residential_`var'  = 1 if location_residence == 1 & Offense_`var' == 1
+}
+
+// Collapse to a single day-month-agency-observation
 // First collapse using agency_population and policeforce as groups
 // This keeps these variables, and basically creates one observation per agency
-collapse (sum) crimes_number prop_obs property_value location_residence location_outdoor location_other location_commerical Offense_AA Offense_Murder Offense_Rape Offense_Robbery Offense_Burglary Offense_Larcency Offense_MVT Offense_FBI_Violent Offense_FBI_Property daytime_crime*, by(day month state county msa  agency_population policeforce)
+collapse (sum) crimes_number property_value location_residence Offense_AA Offense_Murder Offense_Rape Offense_Robbery Offense_Burglary Offense_Larcency Offense_MVT Offense_FBI_Violent Offense_FBI_Property daytime_crime* residential_*, by(day month state county msa  agency_population policeforce)
 
 // Now collapse such that for each day/month/county we have one observation
 // This second collapse also sums up the agency_population and policeforce.
 // The first collapse is needed, cause o.w. one agency can have multiple entries within a day, and its pop/force would be counted multiple times
-collapse (sum) crimes_number prop_obs property_value location_residence location_outdoor location_other location_commerical Offense_AA Offense_Murder Offense_Rape Offense_Robbery Offense_Burglary Offense_Larcency Offense_MVT Offense_FBI_Violent Offense_FBI_Property daytime_crime* agency_population policeforce, by(day month state county msa)
+collapse (sum) crimes_number property_value location_residence Offense_AA Offense_Murder Offense_Rape Offense_Robbery Offense_Burglary Offense_Larcency Offense_MVT Offense_FBI_Violent Offense_FBI_Property daytime_crime* residential_* agency_population policeforce, by(day month state county msa)
 
-// !!!
-// Issue with agency_population -> sum ignores overlap and leads to large agency_population/population sahres/weights
-// one could use this variable if there is only! one(1) agency
-// Issue - 2 or more: Take largest value as "lower bound"; this assumes, the smaler agency is is only opperating within the larger one
-// However, while this is a lower bound for the coverage, it would lead to an upward bound for the weights (weights largest if share is small)
-// Alternative, when computing weights, (county level/how about msa?), then replace the share A_pop/Pop = 1 if >1
-// This would imply, that if we know which county the agency works in, then the share can never be above 1
 
 // Rescale the variables
-replace property_value = property_value / prop_obs if prop_obs != 0
+replace property_value = property_value / Offense_FBI_Property if Offense_FBI_Property != 0
 label variable property_value "average property stolen in a property crime"
-drop prop_obs
-
-// relative number of crimes at night as a share of crimes in the same offense category
-foreach var in AA Murder Rape Robbery Burglary Larcency MVT {
-	replace daytime_crime_`var'  = daytime_crime_`var' /  Offense_`var' if Offense_`var' != 0
-}
 
 
 // split the msa variable into the name and the states
@@ -344,7 +336,7 @@ replace  multi_county = 1 if strpos(county, ";") != 0
 // Order Dataset and create empty split vars
 ******************
 // Split Variables
-foreach var in CRIMES CRIMES_CHARACTERISTICS AGENCY_INFOS{
+foreach var in CRIMES AGENCY_INFOS{
 	gen `var' = .
 }
 
@@ -361,7 +353,7 @@ drop if missing(Area_Name)
 egen id_NIBRS = group(Area_Name state)
 
 // order the data in the a meaningful way
-order state Area_Name multi_county msa msa_state multi_msa multi_state_msa day month CRIMES crimes_number Offense_AA Offense_Murder Offense_Rape Offense_Robbery Offense_Burglary Offense_Larcency Offense_MVT Offense_FBI_Violent Offense_FBI_Property CRIMES_CHARACTERISTICS location_residence location_outdoor location_other location_commerical daytime_crime_AA daytime_crime_Murder daytime_crime_Rape daytime_crime_Robbery daytime_crime_Burglary daytime_crime_Larcency daytime_crime_MVT property_value AGENCY_INFOS  agency_population policeforce
+order id_NIBRS state Area_Name multi_county msa msa_state multi_msa multi_state_msa day month CRIMES crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT AGENCY_INFOS agency_population policeforce
 
 **************************
 // Save final Dataset

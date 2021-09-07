@@ -241,5 +241,5 @@ save Weather_Stations_Clean.dta, replace
 		save weather_county_day.dta, replace
 
 		// Note:
-		// RONAOKE and RICHMOND are both as CITY and (not) in the data, so hard to judge 
+		// RONAOKE and RICHMOND are both as CITY and (not) in the data, so can't be directly merged without any assumptions
 		 

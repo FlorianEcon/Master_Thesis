@@ -1,3 +1,20 @@
+************************
+// Merger
+************************
+/*
+    Created on 20.3.2021
+    @author: Florian Fickler
+    Goal:
+        1. Add some data points regarding days of the year
+		2. Merge ACS and BTS to one County-Level dataset
+		3. Add FBI Crime data and use distribution algorithm for multi-county Agencies
+		4. Add Weather (NOOA) and Unemployment (LAUS) to the counties
+		5. Save a final dataset for estimations
+		6. This procedure is done for both waves of the ACS (Wave 1 obsolete)
+		7. This is also done for the MSA level (currently not completely implemented)
+
+*/
+
 /// Merge All three Datasets to one big one
 drop _all
 //set cd
@@ -69,7 +86,10 @@ foreach wave in 1 5 {
 	generate eventdate = date(str_date, "DMY")
 
 	// Extract Weekdays
-	gen day_of_week = dow(eventdate)
+	gen day_of_week = dow(eventdate)	
+
+	// create a variable indicating the day-number of the entry (1-365) for 2019
+	gen day_year = doy(eventdate)
 
 	// Assign label
 	label define weekdays 0 "Sunday" 1 "Monday" 2 "Thuesday" 3 "Wednesday" 4 "Thursday" 5 "Friday" 6 "Saturday"
@@ -98,7 +118,7 @@ foreach wave in 1 5 {
 	// Order Variables
 	***
 	// order time-variables to the front
-	order geographicareaname Area_Name state month day day_of_week week free_day weekend
+	order geographicareaname Area_Name state month day day_of_week day_year week free_day weekend
 	
 	*********************
 	// save Macro-Trip-Data - temporary file
@@ -111,6 +131,9 @@ foreach wave in 1 5 {
 *****************************************
 // 1.a) Merge NIBRS based on counties  //
 *****************************************
+	********************************
+	// i. Dataset only containing direct matches
+	********************************
 foreach wave in 1 5 {
     drop _all
     // load in ACS File
@@ -119,7 +142,7 @@ foreach wave in 1 5 {
 	// Merge
 	merge 1:1 Area_Name state day month using NIBRS_State_Data.dta // , nogen assert(2 3)
 	
-	// Extract the Subset of Agencies without a merge (merge later via MSA)
+	// Extract the Subset of Agencies without a merge (merge later)
 	preserve
 	// number of affected obs 30.091
 	// 197 agencies/Area_Names
@@ -157,8 +180,8 @@ foreach wave in 1 5 {
 	
 	// bys Area_Name state week: egen County_NIBRS_week = total(crimes_number), missing
 	
-	// local with all varieables that are replaced with zero
-	local NIBRS_Vars crimes_number Offense_AA Offense_Murder Offense_Rape Offense_Robbery Offense_Burglary Offense_Larcency Offense_MVT Offense_FBI_Violent Offense_FBI_Property  location_residence location_outdoor location_other location_commerical daytime_crime_AA daytime_crime_Murder daytime_crime_Rape daytime_crime_Robbery daytime_crime_Burglary daytime_crime_Larcency daytime_crime_MVT property_value
+	// local with all variables that are replaced with zero
+	local NIBRS_Vars crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT
 	
 	foreach var in `NIBRS_Vars' {
 		replace `var' = 0 if missing(`var') & !missing(County_NIBRS_month)
@@ -172,16 +195,19 @@ foreach wave in 1 5 {
 		bys Area_Name state day month: egen `var'_sum = sum(`var')
 		bys Area_Name state: egen `var'_max = max(`var'_sum)
 		replace `var' = `var'_max
-		drop `var'_max
+		drop `var'_max `var'_sum
 	}
+
+	/// ONLY Analytical
 	// Define a weight for population
 	// First replace 0 population as missing, data issue
-	replace agency_population = . if agency_population == 0
+	//replace agency_population = . if agency_population == 0
 	
 	// now generate the share
-	gen agency_pop_share = min(agency_population / PopulationTotal, 1) if !missing(agency_population)
+	// gen agency_pop_share = min(agency_population / PopulationTotal, 1) if !missing(agency_population)
 	// most observations are very close to 1 (75% are over 82%; median = 96.6%)
 	// most varation is for small counties and obs with low numbers of crime
+	// possible to rescale all varibales with the inverse of this share, but would need to check, that no other (1-county) LEA is active in this county
 		
 	// replacing varaibles in relation with the msa
 	// first string variables by sorting missings on top, then using last (hopefully with entry) obs to fill in missings
@@ -271,15 +297,33 @@ foreach wave in 1 5 {
 	drop if _merge == 1 & `wave' == 1
 	drop _merge
 	
-	// generate the maximum population within a nibrs_obs
-	bys id_NIBRS day month: egen pop_sum = sum(PopulationTotal) if id_long == 1
+	// calculate the covered pop of one county agencies and transfer it to all obs
+	bys Area_Name state: egen coverd_pop_temp = max(agency_population) if id_long == 0 
+	bys Area_Name state: egen coverd_pop = max(coverd_pop_temp)
+	
+	// calculate Net-Population in all counties
+	gen net_pop = PopulationTotal - coverd_pop if id_long == 1
+	// For some this is less than 0 (Data from Census != Data from FBI and overlapp in coverage) - We replace those with zero assuming the county is already fully covered
+	replace net_pop = 0 if net_pop < 0
+	drop coverd_pop coverd_pop_temp
+
+	// generate the the total uncovered population within a LEA
+	bys id_NIBRS day month: egen pop_sum = sum(net_pop) if id_long == 1
+	// Drop those that have no covered population left (2LEA - 6 obs) 
+	drop if pop_sum == 0 
 	
 	// gen a share variable, this can later be used (after merge, to distribute observations)
-	gen pop_share = PopulationTotal / pop_sum if id_long == 1
-	drop pop_sum 	
+	gen pop_share = net_pop / pop_sum if id_long == 1
+	drop pop_sum
+	
+	// Analytical - needs to be 1 for all obs
+	// bys id_NIBRS day month: egen sum_share = sum(pop_share) if id_long == 1
+	// sum sum_share
+	// drop sum_share
+	
 	
 	// reweight observations based on the popualtion share
-	local crime_vars crimes_number Offense_AA Offense_Murder Offense_Rape Offense_Robbery Offense_Burglary Offense_Larcency Offense_MVT Offense_FBI_Violent Offense_FBI_Property location_residence location_outdoor location_other location_commerical daytime_crime_AA daytime_crime_Murder daytime_crime_Rape daytime_crime_Robbery daytime_crime_Burglary daytime_crime_Larcency daytime_crime_MVT property_value agency_population policeforce
+	local crime_vars crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT agency_population policeforce	
 	foreach var in `crime_vars' {
 			replace `var' = `var' * pop_share if id_long == 1		
 	}
@@ -315,7 +359,18 @@ foreach wave in 1 5 {
 	
 	// Now collapse such that for each day/month/county we have one observation
 	// Due to the change in policeforce/agency_population, we now use it to as grouping variables, they are the same within each observation
-	collapse (sum) crimes_number property_value location_residence location_outdoor location_other location_commerical Offense_AA Offense_Murder Offense_Rape Offense_Robbery Offense_Burglary Offense_Larcency Offense_MVT Offense_FBI_Violent Offense_FBI_Property daytime_crime*, by(agency_population policeforce day month state Area_Name msa)
+	collapse (sum) crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT, by(agency_population policeforce day month state Area_Name msa)
+	
+	
+	
+	
+	// We now round all numbers to whole numbers, this is done to apply a count estimator later on
+	local crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT agency_population policeforce
+	foreach var in `crime_vars' {
+			replace `var' = round(`var',1)		
+	}
+	
+	
 	
 	****************************
 	// save Dataset
@@ -323,7 +378,7 @@ foreach wave in 1 5 {
 	save `NIBRS_County_`wave'_PopWeighted', replace
 	****************************
 	
-	// merge with ACTS-BTS data
+	// merge with ACS-BTS data
 	merge 1:1 Area_Name state day month using `ACS_BTS_County_`wave'', nogen	
 	
 	// As above, clean dataset and impute zeros for empty days
@@ -344,7 +399,7 @@ foreach wave in 1 5 {
 	// bys Area_Name state week: egen County_NIBRS_week = total(crimes_number), missing
 	
 	// local with all varieables that are replaced with zero
-	local NIBRS_Vars crimes_number Offense_AA Offense_Murder Offense_Rape Offense_Robbery Offense_Burglary Offense_Larcency Offense_MVT Offense_FBI_Violent Offense_FBI_Property  location_residence location_outdoor location_other location_commerical daytime_crime_AA daytime_crime_Murder daytime_crime_Rape daytime_crime_Robbery daytime_crime_Burglary daytime_crime_Larcency daytime_crime_MVT property_value agency_population policeforce
+	local NIBRS_Vars crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT
 	
 	foreach var in `NIBRS_Vars' {
 		replace `var' = 0 if missing(`var') & !missing(County_NIBRS_month)
@@ -361,28 +416,77 @@ foreach wave in 1 5 {
 		drop `var'_max `var'_sum
 	}
 	
+	
+	/// ONLY Analatytical
 	// First replace 0 population as missing, data issue
-	replace agency_population = . if agency_population == 0
+	//replace agency_population = . if agency_population == 0
 	
 	// now generate the share
-	gen agency_pop_share = min(agency_population / PopulationTotal, 1) if !missing(agency_population)
-	// most observations are very close to 1 (75% are over 82%; median = 96.6%)
+	//gen agency_pop_share = min(agency_population / PopulationTotal, 1) if !missing(agency_population)
+	// most observations are very close to 1 (q10 = 60%, q25 = 86%; q50 = 97)
 	// most varation is for small counties and obs with low numbers of crime
+	// This indicates, that even though we miss some observations, the overwhelming majority is accounted for
+	// High corelation between share and NIBRS coverage!
 	
 	// regenerating the split-vars
-	foreach var in CRIMES CRIMES_CHARACTERISTICS AGENCY_INFOS {
+	foreach var in CRIMES AGENCY_INFOS {
 	gen `var' = .
 	}
 	
 	// order dataset as others (different order, due to different merge)
-	order geographicareaname Area_Name state month day day_of_week week free_day weekend POPULATION PopulationTotal PopulationMale Population16over Population18over Population20to24 Population25to34 Population35to44 Population45to54 Population55to59 Population60to64 Population65over PopulationAgeMedian RACE Race_White Race_Black Race_Native Race_Asian Race_Other Race_Latino WORK_POPULATION WAPopulation LFPR armedforces UER WORKER_CLASS Worker_Wage Worker_Gov Worker_Self_Emp EDUCATION Educ_Enrolment Educ_NoHighschool Educ_Highschool Educ_Bachelor HH_INCOME HH_below10000 HH_10000to14999 HH_15000to24999 HH_25000to34999 HH_35000to49999 HH_50000to74999 HH_75000to99999 HH_100000to149999 HH_150000to199999 HH_200000above HH__Median_Income HH__Mean_Income HH_with_earning HH_with_socialsecurity HH_with_pension HH_suppl_security_inc HH_cashassistance Poverty_FoodstrampSNAP Poverty_Line_all Poverty_Line_kids HEALTH Health_Insured Health_Public HH_CHARACTERISTICS HH_Size_Mean HH_Single HH_Married_Cohabiting HH_withkids HH_with65 HH_computer HH_broadbandinternet COMMUTING commute_alone commute_carpool commute_publictransportation commute_walked commute_other commute_workingfromhome commute_traveltime_mean VEHICLES vehicle_None vehicle_One vehicle_Two vehicle_ThreeorMore HOUSING Housing_Units_Total Housing_VacancyRate OwnerOccupied_Share Rooms_Median House_MedianValue_OwnerOccupied Rent_Gross_Median NEIGHBORS Neighbor_None Neighbor_1 Neighbor_2to3 Neighbor_4to18 Neighbor_19plus Neighbor_other BUILDINGS Buldings_New Buldings_Aged Buldings_Old OCCUPATION occupation_management occupation_service occupation_salesoffice occupation_BuildingRessources occupation_ProductionTransport INDUSTRY industry_agriculture industry_construction industry_manufacturing industry_wholesaletrade industry_retailtrade industry_transportation industry_information industry_financialservices industry_Management industry_SocialServices industry_ArtHotelEntertainment industry_other industry_publicservices TRIPS Population_BTS PopulationAtHome trips trips_pP trip_length_mean trips1 trips13 trips35 trips510 trips1025 trips2550 trips50100 trips100250 trips250500 trips500 public_holiday msa  CRIMES crimes_number Offense_AA Offense_Murder Offense_Rape Offense_Robbery Offense_Burglary Offense_Larcency Offense_MVT Offense_FBI_Violent Offense_FBI_Property CRIMES_CHARACTERISTICS location_residence location_outdoor location_other location_commerical daytime_crime_AA daytime_crime_Murder daytime_crime_Rape daytime_crime_Robbery daytime_crime_Burglary daytime_crime_Larcency daytime_crime_MVT property_value AGENCY_INFOS agency_population policeforce agency_pop_share
+	order geographicareaname Area_Name state msa month day day_of_week day_year week free_day weekend public_holiday POPULATION PopulationTotal PopulationMale Population16over Population18over Population20to24 Population25to34 Population35to44 Population45to54 Population55to59 Population60to64 Population65over PopulationAgeMedian RACE Race_White Race_Black Race_Native Race_Asian Race_Other Race_Latino WORK_POPULATION WAPopulation LFPR armedforces UER WORKER_CLASS Worker_Wage Worker_Gov Worker_Self_Emp EDUCATION Educ_Enrolment Educ_NoHighschool Educ_Highschool Educ_Bachelor HH_INCOME HH_below10000 HH_10000to14999 HH_15000to24999 HH_25000to34999 HH_35000to49999 HH_50000to74999 HH_75000to99999 HH_100000to149999 HH_150000to199999 HH_200000above HH__Median_Income HH__Mean_Income HH_with_earning HH_with_socialsecurity HH_with_pension HH_suppl_security_inc HH_cashassistance Poverty_FoodstrampSNAP Poverty_Line_all Poverty_Line_kids HEALTH Health_Insured Health_Public HH_CHARACTERISTICS HH_Size_Mean HH_Single HH_Married_Cohabiting HH_withkids HH_with65 HH_computer HH_broadbandinternet COMMUTING commute_alone commute_carpool commute_publictransportation commute_walked commute_other commute_workingfromhome commute_traveltime_mean VEHICLES vehicle_None vehicle_One vehicle_Two vehicle_ThreeorMore HOUSING Housing_Units_Total Housing_VacancyRate OwnerOccupied_Share Rooms_Median House_MedianValue_OwnerOccupied Rent_Gross_Median NEIGHBORS Neighbor_None Neighbor_1 Neighbor_2to3 Neighbor_4to18 Neighbor_19plus Neighbor_other BUILDINGS Buldings_New Buldings_Aged Buldings_Old OCCUPATION occupation_management occupation_service occupation_salesoffice occupation_BuildingRessources occupation_ProductionTransport INDUSTRY industry_agriculture industry_construction industry_manufacturing industry_wholesaletrade industry_retailtrade industry_transportation industry_information industry_financialservices industry_Management industry_SocialServices industry_ArtHotelEntertainment industry_other industry_publicservices TRIPS Population_BTS PopulationAtHome trips trips_pP trip_length_mean trips1 trips13 trips35 trips510 trips1025 trips2550 trips50100 trips100250 trips250500 trips500 CRIMES crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT AGENCY_INFOS agency_population policeforce
 		
 	*********************
 	// save Macro-Trip-Data
 	save ACS_BTS_NIBRS_County_POPWeight_`wave', replace
 	*********************
+	
+	
+*********************************************
+// 1.c) Add Unemploymenmt and Weather Data //
+*********************************************
+	
+	********************************
+	// i. LAUS - Unemployment
+	********************************
+	// merge on a monthly basis
+	merge m:1 Area_Name state month using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset\Intermediate Files\Laus_Month.dta"
+
+	// As before, drop unused observations from using - these vary with the version of ACS used
+	drop if _merge==2
+	drop _merge
+
+
+	********************************
+	// ii. NOOA - Weather
+	********************************
+	
+	// merge daily weather data
+	merge 1:1 Area_Name state day_year using "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset\Intermediate Files\weather_county_day.dta"
+
+	// drop observations only contained in the Weather data - these vary with the version of ACS used
+	drop if _merge == 2
+	drop _merge
+
+	
+*********************
+// SAVE FINAL DATASET
+// HERE: County-level observations
+save Opportunity_County_Popweight_`wave', replace
+*********************
+	
 }
 
+
+
+
+
+
+
+
+/*
+// MSA Part is currently not fully implemented!
+// Needs readjustment for new crime data as done for the County Level - To-Do
 
 ****************************************************************************************************
 // 2. MSA level
@@ -909,3 +1013,5 @@ foreach wave in 1 5 {
 	save ACS_BTS_NIBRS_MSA_PopWeighted_`wave'.dta,replace
 	************************
 }
+
+*/
