@@ -15,11 +15,10 @@
 
 */
 
-/// Merge All three Datasets to one big one
+// Merge All three Datasets to one big one
 drop _all
 //set cd
 cd "C:\Users\Flori\OneDrive\Desktop\Uni\Emma\Dataset"
-
 
 ****************************************************************************************************
 // 1. County level
@@ -97,7 +96,6 @@ foreach wave in 1 5 {
 
 	// gen week of the year variable for disease merge
 	gen week = week(eventdate)
-
 	drop eventdate str_date
 
 	// Generate a Weekend Dummy
@@ -114,9 +112,6 @@ foreach wave in 1 5 {
 	// replace "." in Area Name such as St. Clair (these "." are not included in the FBI Data)	
 	replace Area_Name = subinstr(Area_Name, ".", "", .)
 	
-	***
-	// Order Variables
-	***
 	// order time-variables to the front
 	order geographicareaname Area_Name state month day day_of_week day_year week free_day weekend
 	
@@ -159,26 +154,19 @@ foreach wave in 1 5 {
 	drop if _merge == 2
 	drop _merge
 	
-	/// !!!!
-	/// Recalculate the following numbers with 1016 as the total numbers of counties - here biased due to distinct names from NIBRS
-	
 	// replace mssing values with zeros (or max)(if at least on entry for a county exists)
 	// First: Look for counties without any data
 	bys Area_Name state: egen County_NIBRS = total(crimes_number), missing
 	// These areas have no Agency matched to them
-	// THis affects 42 Counties in Total, 29 (69%) of which have a population of 9000 or less; only 8 (19%) have a population of above 15.200
-	// List for details (Total of 15.330 obs)
-	// Only 0.028% of all counties are affected
+	// This affects 39 Counties (2.6%) in Total: 10 counties report only zero crimes, the remaining 29 report only missing entries
 	// tab Area_Name state if County_NIBRS == .
 	drop if County_NIBRS == .
 	drop County_NIBRS	
 	
-	// Now Look finer (month opr week level; week might be to fine)
+	// Now Look finer - Month level
 	bys Area_Name state month: egen County_NIBRS_month = total(crimes_number), missing
 	// Affects 30.785 Observations in 253 (17%) counties
-	// Again, most are very small counties - 84.33% are below 10.000 and 9% above 15.000 
-	
-	// bys Area_Name state week: egen County_NIBRS_week = total(crimes_number), missing
+	// Most are very small counties - 84.33% are below 10.000 and 9% above 15.000 
 	
 	// local with all variables that are replaced with zero
 	local NIBRS_Vars crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT
@@ -198,6 +186,7 @@ foreach wave in 1 5 {
 		drop `var'_max `var'_sum
 	}
 
+	***
 	/// ONLY Analytical
 	// Define a weight for population
 	// First replace 0 population as missing, data issue
@@ -208,6 +197,7 @@ foreach wave in 1 5 {
 	// most observations are very close to 1 (75% are over 82%; median = 96.6%)
 	// most varation is for small counties and obs with low numbers of crime
 	// possible to rescale all varibales with the inverse of this share, but would need to check, that no other (1-county) LEA is active in this county
+	***
 		
 	// replacing varaibles in relation with the msa
 	// first string variables by sorting missings on top, then using last (hopefully with entry) obs to fill in missings
@@ -316,11 +306,12 @@ foreach wave in 1 5 {
 	gen pop_share = net_pop / pop_sum if id_long == 1
 	drop pop_sum
 	
+	***
 	// Analytical - needs to be 1 for all obs
 	// bys id_NIBRS day month: egen sum_share = sum(pop_share) if id_long == 1
 	// sum sum_share
 	// drop sum_share
-	
+	***
 	
 	// reweight observations based on the popualtion share
 	local crime_vars crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT agency_population policeforce	
@@ -357,12 +348,10 @@ foreach wave in 1 5 {
 		drop `var'_max `var'_sum
 	}
 	
-	// Now collapse such that for each day/month/county we have one observation
-	// Due to the change in policeforce/agency_population, we now use it to as grouping variables, they are the same within each observation
+	
+	// Collapse such that for each day/month/county we have one observation
+	// Due to the change in policeforce/agency_population, we can now use it as grouping variables, since they are the same within each observation
 	collapse (sum) crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT, by(agency_population policeforce day month state Area_Name msa)
-	
-	
-	
 	
 	// We now round all numbers to whole numbers, this is done to apply a count estimator later on
 	local crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT agency_population policeforce
@@ -370,8 +359,7 @@ foreach wave in 1 5 {
 			replace `var' = round(`var',1)		
 	}
 	
-	
-	
+		
 	****************************
 	// save Dataset
 	tempfile NIBRS_County_`wave'_PopWeighted
@@ -385,20 +373,17 @@ foreach wave in 1 5 {
 	bys Area_Name state: egen County_NIBRS = total(crimes_number), missing
 	// These areas have no Agency matched to them
 	// THis affects 32 Counties in Total, 24 (75%) of which have a population of 8500 or less; only 4 (9%) have a population of above 15.200
-	// List for details (Total of 12.045 obs)
-	// Only 0.031% of all counties are affected
+
 	// tab Area_Name state if County_NIBRS == .
 	drop if County_NIBRS == .
 	drop County_NIBRS	
 	
-	// Now Look finer (month opr week level; week might be to fine)
+	// Now Look finer - Month level
 	bys Area_Name state month: egen County_NIBRS_month = total(crimes_number), missing
 	// Affects 30.688 Observations in 223 (21.9%) counties
 	// Again, most are very small counties - 86.38% are below 10.000 and 6.5% above 15.000 
 	
-	// bys Area_Name state week: egen County_NIBRS_week = total(crimes_number), missing
-	
-	// local with all varieables that are replaced with zero
+	// local with all Variables that are replaced with zero
 	local NIBRS_Vars crimes_number location_residence Offense_FBI_Violent Offense_FBI_Property property_value Offense_AA daytime_crime_AA residential_AA Offense_Murder daytime_crime_Murder residential_Murder Offense_Rape daytime_crime_Rape residential_Rape Offense_Robbery daytime_crime_Robbery residential_Robbery Offense_Burglary daytime_crime_Burglary residential_Burglary Offense_Larcency daytime_crime_Larcency residential_Larcency Offense_MVT daytime_crime_MVT residential_MVT
 	
 	foreach var in `NIBRS_Vars' {
@@ -416,8 +401,8 @@ foreach wave in 1 5 {
 		drop `var'_max `var'_sum
 	}
 	
-	
-	/// ONLY Analatytical
+	***
+	/// Analatytical
 	// First replace 0 population as missing, data issue
 	//replace agency_population = . if agency_population == 0
 	
@@ -426,7 +411,8 @@ foreach wave in 1 5 {
 	// most observations are very close to 1 (q10 = 60%, q25 = 86%; q50 = 97)
 	// most varation is for small counties and obs with low numbers of crime
 	// This indicates, that even though we miss some observations, the overwhelming majority is accounted for
-	// High corelation between share and NIBRS coverage!
+	// High corelation between share and NIBRS coverage
+	***
 	
 	// regenerating the split-vars
 	foreach var in CRIMES AGENCY_INFOS {
@@ -445,7 +431,6 @@ foreach wave in 1 5 {
 *********************************************
 // 1.c) Add Unemploymenmt and Weather Data //
 *********************************************
-	
 	********************************
 	// i. LAUS - Unemployment
 	********************************
@@ -478,15 +463,10 @@ save Opportunity_County_Popweight_`wave', replace
 }
 
 
-
-
-
-
-
-
 /*
 // MSA Part is currently not fully implemented!
-// Needs readjustment for new crime data as done for the County Level - To-Do
+// Needs readjustment for new crime data as done for the County Level
+// Since we currently only estimate our restults using county level observations, this part of the data is on hold!
 
 ****************************************************************************************************
 // 2. MSA level
@@ -1013,5 +993,4 @@ foreach wave in 1 5 {
 	save ACS_BTS_NIBRS_MSA_PopWeighted_`wave'.dta,replace
 	************************
 }
-
 */
