@@ -18,6 +18,7 @@ import requests
 import json
 import os
 import csv
+import pandas
 
 # Set working directory:
     # Replace XXX and enter own directory
